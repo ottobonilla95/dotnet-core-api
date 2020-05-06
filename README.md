@@ -1,3 +1,5 @@
+## Still in development
+
 ![dotnetcore](https://miro.medium.com/max/750/1*zc1BKfAHkpvrZlHPbUvuYA.png)
 
 ## Description
@@ -11,7 +13,7 @@ Features:
 
 
 ## Demo
-To see the full demo click here [Here](http://128.199.43.48/playapp_webapp/login).
+To see the preview demo click here [Here](http://128.199.43.48/playapp_webapp/login).
 
 
 ## Front End
