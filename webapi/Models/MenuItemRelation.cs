@@ -12,7 +12,9 @@ namespace webapi.Models
         public int Id { get; set; }
         public int MenuItemId { get; set; }
         public MenuItem MenuItem { get; set; }
-        public int MenuItemFatherId { get; set; }
+        public int? MenuItemFatherId { get; set; }
         public MenuItem MenuItemFather { get; set; }
+        public int sequence { get; set; }
+
     }
 }

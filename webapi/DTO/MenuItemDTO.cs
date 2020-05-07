@@ -12,5 +12,6 @@ namespace webapi.DTO
         public string Action { get; set; }
         public string Icon { get; set; }
         public string MenuFatherId { get; set; }
+        public string sequence { get; set; }
     }
 }

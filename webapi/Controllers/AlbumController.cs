@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Data.Interfaces;
@@ -17,6 +18,16 @@ namespace webapi.Controllers
         {
             _playAppRepository = playAppRepository;
             _mapper = mapper;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var album = await _playAppRepository.GetAllAlbums();
+
+            var albumToReturn = _mapper.Map<List<AlbumToReturn>>(album);
+
+            return Ok(new {items=albumToReturn });
         }
 
         [HttpGet("{albumId}")]

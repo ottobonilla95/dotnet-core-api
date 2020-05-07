@@ -10,6 +10,7 @@ namespace webapi.Data.Interfaces
         void Add<T>(T entity) where T : class;
         void Delete<T>(T entity) where T : class;
         Task<bool> SaveAll();
+        Task<List<Album>> GetAllAlbums();
         Task<Album> GetAlbum(int Id);
         Task<Song> GetSong(int Id);
         Task<List<MenuItemDTO>> GetMenu();

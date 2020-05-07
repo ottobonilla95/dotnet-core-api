@@ -24,6 +24,7 @@ namespace webapi.Data.Repositories
         {
             _context.Remove(entity);
         }
+
         public async Task<bool> SaveAll()
         {
             return await _context.SaveChangesAsync() > 0;
@@ -41,11 +42,17 @@ namespace webapi.Data.Repositories
                      Text= menuitem.Text,
                      Action= menuitem.Action,
                      Icon= menuitem.Icon,
-                     MenuFatherId = (x == null ? null : x.MenuItemFatherId.ToString())
+                     MenuFatherId = (x == null ? null : x.MenuItemFatherId.ToString()),
+                     sequence = (x == null ? null : x.sequence.ToString())
                  }
                 ).ToListAsync();
 
             return items;
+        }
+
+        public async Task<List<Album>> GetAllAlbums()
+        {
+            return await _context.Albums.ToListAsync();
         }
 
         public async Task<Album> GetAlbum(int Id)
