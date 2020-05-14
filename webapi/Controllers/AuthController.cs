@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +45,24 @@ namespace webapi.Controllers
             byte[] passwordHash;
             byte[] passwordSalt;
 
+
+
+            var userFound = await _authRepository.GetUserByUserName(userForRegister.Username);
+            if (userFound == null)
+            {
+                userFound = await _authRepository.GetUserByEmail(userForRegister.Email);
+
+                if (userFound != null)
+                {
+                    return BadRequest(new { message = "Email already exists!" });
+                }
+            }
+            else
+            {
+                return BadRequest(new { message = "Username Already exists!" });
+            }
+
+
             Utilities.CreatePasswordHash(userForRegister.Password, out passwordHash, out passwordSalt);
             User user = _mapper.Map<User>(userForRegister);
 
@@ -58,15 +77,13 @@ namespace webapi.Controllers
             claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
             claims.Add(new Claim(ClaimTypes.Name, user.Username));
 
-            var accessToken = GenerateToken(claims, 10);
+            var accessToken = GenerateToken(claims);
             var refreshToken = GenerateRefreshToken();
             user.RefreshToken = refreshToken;
             await _authRepository.SaveRefreshToken(user);
 
             return Ok(new
             {
-                username = user.Username,
-                profileImage = user.ProfileImage,
                 accessToken = accessToken.Token,
                 expirationDate = accessToken.ExpirationDate.ToString("s"),
                 refreshToken = refreshToken.Replace("+", "%2B")
@@ -96,18 +113,19 @@ namespace webapi.Controllers
                     if (Utilities.VerifyPasswordHash(user.Password, userFound.PasswordHash, userFound.PasswordSalt))
                     {
                         List<Claim> claims = new List<Claim>();
+                        claims.Add(new Claim("UserId", userFound.Id.ToString()));
                         claims.Add(new Claim(ClaimTypes.NameIdentifier, userFound.Id.ToString()));
                         claims.Add(new Claim(ClaimTypes.Name, userFound.Username));
 
-                        var accessToken = GenerateToken(claims, 10);
+                        var accessToken = GenerateToken(claims);
                         var refreshToken = GenerateRefreshToken();
                         userFound.RefreshToken = refreshToken;
                         await _authRepository.SaveRefreshToken(userFound);
 
+                        
+
                         return Ok(new
                         {
-                            username = userFound.Username,
-                            profileImage = userFound.ProfileImage,
                             accessToken = accessToken.Token,
                             expirationDate = accessToken.ExpirationDate.ToString("s"),
                             refreshToken = refreshToken.Replace("+", "%2B")
@@ -133,19 +151,20 @@ namespace webapi.Controllers
             }
         }
 
+        
+
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh(string refreshToken)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            string token = Request.Headers["Authorization"].ToString().Replace("Bearer ", string.Empty);
+            var claims = User.Claims;
 
-            var principal = GetPrincipalFromExpiredToken(token);
             User userFound = await _authRepository.GetUserById(userId);
-
+            
             if (userFound.RefreshToken != refreshToken)
                 return BadRequest(new { message = "Invalid refresh token" });
 
-            var accessToken = GenerateToken(principal.Claims, 10);
+            var accessToken = GenerateToken(claims);
             var newRefreshToken = GenerateRefreshToken();
 
             userFound.RefreshToken = newRefreshToken;
@@ -154,33 +173,10 @@ namespace webapi.Controllers
 
             return Ok(new
             {
-                username = userFound.Username,
-                profileImage = userFound.ProfileImage,
                 accessToken = accessToken.Token,
                 expirationDate = accessToken.ExpirationDate.ToString("s"),
                 refreshToken = newRefreshToken.Replace("+", "%2B")
             });
-        }
-        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-        {
-            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("jwt").GetValue<string>("SecretKey"));
-
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false, //you might want to validate the audience and issuer depending on your use case
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key)
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-
-            return principal;
         }
 
         public string GenerateRefreshToken()
@@ -193,23 +189,25 @@ namespace webapi.Controllers
             }
         }
 
-        public AccessToken GenerateToken(IEnumerable<Claim> claims, double expirationInMinutes)
+        public AccessToken GenerateToken(IEnumerable<Claim> claims)
         {
             var key = Encoding.ASCII.GetBytes(_configuration.GetSection("jwt").GetValue<string>("SecretKey"));
+            var expirationInDays = int.Parse( _configuration.GetSection("jwt").GetValue<string>("expirationInDays"));
+
             var tokenHandler = new JwtSecurityTokenHandler();
+
+            var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(expirationInMinutes),
-                SigningCredentials =
-                    new SigningCredentials(
-                        new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha256Signature)
+                Expires = DateTime.Now.AddDays(expirationInDays),
+                SigningCredentials = creds
             };
+
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return new AccessToken { Token = tokenHandler.WriteToken(token), ExpirationDate = DateTime.UtcNow.AddMinutes(expirationInMinutes) };
+            return new AccessToken { Token = tokenHandler.WriteToken(token), ExpirationDate = DateTime.Now.AddMinutes(1) };
         }
     }
 }

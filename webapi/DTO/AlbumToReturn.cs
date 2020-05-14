@@ -12,6 +12,8 @@ namespace webapi.DTO
         public string Description { get; set; }
         public DateTime CreationDate { get; set; }
         public int UserId { get; set; }
+        public UserProfile User;
+        public string Image { get; set; }
         public List<SongToReturn> Songs { get; set; }
     }
 }

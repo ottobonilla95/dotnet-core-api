@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace webapi.DTO
 {
-    public class SongForUpdate
+    public class UserProfile
     {
         public int Id { get; set; }
-        public string Url { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string ProfileImage { get; set; }
     }
 }

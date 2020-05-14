@@ -35,18 +35,18 @@ namespace webapi.Controllers
             return Ok(new { song });
         }
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> CreateSong(Song song)
         {
             _playAppRepository.Add(song);
             if (await _playAppRepository.SaveAll())
-                return Ok(new { song });
+                return Ok(new { data = song });
 
             return BadRequest(new { message="Error when creating the song"});
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> UpdateSong(SongForUpdate songForUpdate)
         {
             var currentSong = await _playAppRepository.GetSong(songForUpdate.Id);
@@ -55,14 +55,14 @@ namespace webapi.Controllers
 
             if (await _playAppRepository.SaveAll())
             {
-                return Ok(new { message = "Album updated" });
+                return Ok(new {data= currentSong });
             }
 
-            return BadRequest(new { message = "Album was not updated" });
+            return BadRequest(new { message = "Song was not updated" });
         }
 
         [HttpDelete("{songId}")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> DeleteSong(int songId)
         {
             var song = await _playAppRepository.GetSong(songId);
@@ -71,7 +71,7 @@ namespace webapi.Controllers
             if (await _playAppRepository.SaveAll())
                 return NoContent();
 
-            return BadRequest("Failed to delete the album");
+            return BadRequest("Failed to delete the song");
         }
     }
 }

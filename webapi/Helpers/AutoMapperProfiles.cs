@@ -8,10 +8,16 @@ namespace webapi.Helpers
     {
         public AutoMapperProfiles()
         {
+            CreateMap<User, UserProfile>();
             CreateMap<UserForRegister, User>();
+
             CreateMap<AlbumForUpdate, Album>();
-            CreateMap<Song, SongToReturn>();
             CreateMap<Album, AlbumToReturn>();
+
+            CreateMap<Song, SongToReturn>();
+            CreateMap<SongForUpdate, Song>();
+
+            
         }
     }
 }

@@ -30,6 +30,10 @@ namespace webapi.Data.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
+        public async Task<User> GetUser(int userId) {
+            return await _context.Users.FirstOrDefaultAsync(u=>u.Id == userId);
+        }
+
         public async Task<List<MenuItemDTO>> GetMenu()
         {
             var items = await
@@ -52,12 +56,12 @@ namespace webapi.Data.Repositories
 
         public async Task<List<Album>> GetAllAlbums()
         {
-            return await _context.Albums.ToListAsync();
+            return await _context.Albums.Include("User").ToListAsync();
         }
 
         public async Task<Album> GetAlbum(int Id)
         {
-            return await _context.Albums.Include("Songs").FirstOrDefaultAsync(a => a.Id == Id);
+            return await _context.Albums.Include("Songs").Include("User").FirstOrDefaultAsync(a => a.Id == Id);
         }
 
         public async Task<Song> GetSong(int Id)
