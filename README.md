@@ -1,4 +1,3 @@
-## Still in development !
 
 ![dotnetcore](https://miro.medium.com/max/750/1*zc1BKfAHkpvrZlHPbUvuYA.png)
 
