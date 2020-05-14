@@ -9,6 +9,7 @@ Features:
 - JWT Authenticaton.
 - Automapper.
 - Entity framework.
+- Cloudinary .net.
 
 
 ## Demo
